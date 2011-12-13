@@ -7,8 +7,9 @@
 //
 
 #import <UIKit/UIKit.h>
+#import <Couchbase/CouchbaseMobile.h>
 
-@interface SAAppDelegate : UIResponder <UIApplicationDelegate>
+@interface SAAppDelegate : UIResponder <UIApplicationDelegate, CouchbaseDelegate>
 
 @property (strong, nonatomic) UIWindow *window;
 

@@ -8,14 +8,50 @@
 
 #import "SAAppDelegate.h"
 
+#import <CouchCocoa/CouchDatabase.h>
+#import <CouchCocoa/CouchServer.h>
+#import <CouchCocoa/RESTOperation.h>
+#import <CouchCocoa/CouchDocument.h>
+
 @implementation SAAppDelegate
 
 @synthesize window = _window;
 
-- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
-{
-    // Override point for customization after application launch.
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
+    CouchbaseMobile* cb = [[CouchbaseMobile alloc] init];
+    cb.delegate = self;
+    NSAssert([cb start], @"Couchbase didn't start! Error = %@", cb.error);
+    
     return YES;
+}
+
+- (void)createDocumentInDatabase:(CouchDatabase*)db {
+    CouchDocument* doc = [db untitledDocument];
+    RESTOperation* op = [doc putProperties:[NSDictionary dictionaryWithObjectsAndKeys:@"Women Be", @"mykey1",
+                                                                                    @"Stoppin", @"mykey2", nil]];
+    // make a synchronous call
+    BOOL wasCreated = [op wait];
+    NSLog(@"DOCUMENT CREATED PLAYA %d", wasCreated);
+}
+
+- (void)couchbaseMobile:(CouchbaseMobile *)couchbase didStart:(NSURL *)serverURL {
+    NSLog(@"SUCCESS");
+    
+    
+    CouchServer* server = [[CouchServer alloc] initWithURL:serverURL];
+    CouchDatabase* db = [server databaseNamed:@"mydb"];
+    
+    // make asynchronous call
+    RESTOperation* op = [db create];
+    [op onCompletion:^{
+        NSLog(@"DB CREATED FOOL!");
+        [self createDocumentInDatabase:db];
+    }];
+    [op start];
+}
+
+- (void)couchbaseMobile:(CouchbaseMobile *)couchbase failedToStart:(NSError *)error {
+    NSLog(@"An error occurred, %@", [error localizedDescription]);
 }
 							
 - (void)applicationWillResignActive:(UIApplication *)application
